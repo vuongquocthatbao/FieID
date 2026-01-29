@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Visit Form</title>
+    
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- THEME V16 MONOLITH --- */
+        :root {
+            --core-primary: #6366f1; /* Indigo 500 */
+            --core-glow: rgba(99, 102, 241, 0.4);
+            --bg-void: #000000;
+            --card-surface: #0a0a0a;
+            --border-dim: #1e1e1e;
+        }
+
+        body {
+            background-color: var(--bg-void);
+            color: #e5e5e5;
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* NEURAL HEADER */
+        .glass-panel {
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.8);
+        }
+
+        /* CHAT STREAM */
+        .bubble { padding: 12px 16px; border-radius: 18px; font-size: 14px; max-width: 94%; line-height: 1.6; word-wrap: break-word; position: relative; }
+        .bubble-bot { background: #111; border-top-left-radius: 4px; border: 1px solid #222; color: #d1d5db; }
+        .bubble-bot strong { color: var(--core-primary); }
+        .bubble-user { background: #312e81; border-top-right-radius: 4px; color: white; margin-left: auto; border: 1px solid #4338ca; }
+
+        /* MONOLITH CARD */
+        .card { background: var(--card-surface); border-radius: 14px; overflow: hidden; position: relative; border: 1px solid #222; margin-top: 14px; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8); transition: all 0.2s; }
+        .card.prod-CRC { border-left: 3px solid #ef4444; } 
+        .card.prod-PL { border-left: 3px solid #3b82f6; }
+
+        .card-header { padding: 12px; background: linear-gradient(90deg, #111, #000); border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: flex-start; }
+
+        /* ATOMIC LEDGER */
+        .ledger { background: #050505; border: 1px solid #222; border-radius: 8px; overflow: hidden; margin: 10px; }
+        .l-row { display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #222; align-items: center; }
+        .l-row:last-child { border-bottom: none; }
+        .l-lbl { font-size: 10px; color: #6b7280; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
+        .l-val { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; }
+
+        /* ACTION MATRIX */
+        .act-grid { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid #222; }
+        .act-btn { background: #0f0f0f; padding: 12px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid #222; transition: 0.2s; color: #6b7280; }
+        .act-btn:last-child { border-right: none; }
+        .act-btn:active { background: #222; color: white; }
+        .act-icon { font-size: 14px; margin-bottom: 4px; }
+        .act-text { font-size: 8px; font-weight: 800; text-transform: uppercase; }
+
+        /* UTILS */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .slide-in { animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        
+        /* CHIPS */
+        .chip { font-size: 10px; padding: 4px 8px; border-radius: 6px; background: #18181b; color: #a1a1aa; border: 1px solid #27272a; white-space: nowrap; transition: 0.2s; }
+        .chip.active { background: #1e1b4b; color: #818cf8; border-color: #4f46e5; box-shadow: 0 0 10px rgba(79, 70, 229, 0.2); }
+
+        /* NEURAL PULSE ANIMATION */
+        .neural-loader { display: flex; gap: 4px; align-items: center; }
+        .n-dot { width: 4px; height: 4px; background: var(--core-primary); border-radius: 50%; animation: n-pulse 1s infinite alternate; }
+        @keyframes n-pulse { 0% { opacity: 0.2; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1.5); } }
+
+        /* PRINT STYLES (PHYSICAL PAPER) */
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; height: 100%; margin: 0; padding: 0; background: white; color: black; z-index: 9999; }
+            @page { size: A5; margin: 5mm; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="h-[100dvh] flex flex-col relative overflow-hidden">
+        
+        <header class="h-14 fixed top-0 w-full z-50 glass-panel flex items-center justify-between px-4">
+            <div class="flex items-center gap-3">
+                <div class="relative w-9 h-9 flex items-center justify-center">
+                    <div class="absolute inset-0 rounded-full border border-indigo-500/30 animate-[spin_3s_linear_infinite]"></div>
+                    <div class="absolute inset-1 rounded-full border border-indigo-400/20 animate-[spin_5s_reverse_infinite]"></div>
+                    <div class="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
+                </div>
+                <div>
+                    <h1 class="text-xs font-black text-gray-100 tracking-[0.2em] uppercase">ĐOÀN PHÚ QUÍ<span class="text-indigo-500">FieID</span></h1>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[8px] text-gray-500 font-mono font-bold">FE Credit</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button @click="toggleVoice" :class="['w-8 h-8 rounded-full flex items-center justify-center border transition', voiceMode ? 'border-indigo-500 text-indigo-400 bg-indigo-900/20' : 'border-gray-800 text-gray-600']">
+                    <i class="fas fa-volume-up text-xs"></i>
+                </button>
+            </div>
+        </header>
+
+        <main ref="chatRef" class="flex-1 overflow-y-auto pt-16 pb-36 px-2 space-y-4 scroll-smooth">
+            
+            <div class="flex flex-col space-y-1 slide-in mt-2">
+                <span class="text-[8px] text-gray-600 ml-2 uppercase font-bold tracking-widest">Tính năng hệ thống</span>
+                <div class="bubble bubble-bot border-l-2 border-indigo-600">
+                    <p class="text-xs">
+                        <strong class="text-indigo-400">Hệ thống Neural Network đã kích hoạt.</strong><br>
+                        Hệ thống sử dụng mô hình Transformer để xử lý 100% dữ liệu.<br>
+                        Các module: <i class="fas fa-search"></i> Omni-Scan, <i class="fas fa-brain"></i> Risk AI, <i class="fas fa-route"></i> Campaign, <i class="fas fa-print"></i> Print.<br>
+                        <i>Mời nhập lệnh...</i>
+                    </p>
+                </div>
+            </div>
+
+            <template v-for="msg in messages" :key="msg.id">
+                <div :class="['flex flex-col space-y-1 slide-in', msg.isUser ? 'items-end' : 'items-start']">
+                    <div :class="['bubble', msg.isUser ? 'bubble-user' : 'bubble-bot']">
+                        
+                        <div v-if="msg.text" v-html="msg.text"></div>
+
+                        <div v-if="msg.type === 'CUSTOMER_LIST'" class="mt-2 w-full min-w-[300px]">
+                            
+                            <div v-if="msg.isRoute" class="flex items-center gap-3 mb-2 p-3 bg-indigo-900/10 border border-indigo-900/30 rounded-lg">
+                                <div class="w-8 h-8 rounded-full bg-indigo-900/20 flex items-center justify-center text-indigo-500"><i class="fas fa-route"></i></div>
+                                <div>
+                                    <div class="text-xs font-bold text-indigo-400 uppercase">Lộ Trình Tối Ưu</div>
+                                    <div class="text-[10px] text-gray-500">Ngày {{ campaignDay }} • {{ msg.data.length }} Điểm dừng</div>
+                                </div>
+                            </div>
+
+                            <div v-for="(c, idx) in msg.data" :key="c.id" :class="['card', c.product === 'CRC' ? 'prod-CRC' : 'prod-PL']">
+                                <div class="card-header">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <div v-if="msg.isRoute" class="w-5 h-5 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-[10px] font-bold text-white font-mono">{{ idx + 1 }}</div>
+                                            <h3 class="font-bold text-sm text-gray-200 leading-tight">{{ c.name }}</h3>
+                                        </div>
+                                        <div class="text-[10px] text-gray-500 font-mono mt-1 flex gap-2">
+                                            <span>#{{ c.id }}</span>
+                                            <span v-if="c.yob">🎂 {{ c.yob }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col items-end gap-1">
+                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border border-gray-700 bg-gray-900 text-gray-400">{{ c.product }}</span>
+                                        <button v-if="c.fileUrl" @click="viewFile(c.fileUrl)" class="text-[9px] text-indigo-400 hover:text-white border border-indigo-900/50 px-2 py-0.5 rounded bg-indigo-900/10 active:bg-indigo-600 transition"><i class="fas fa-file-contract"></i> Gốc</button>
+                                    </div>
+                                </div>
+
+                                <div class="ledger">
+                                    <div class="l-row"><span class="l-lbl">Tổng Dư Nợ</span><span class="l-val text-yellow-500">{{ formatMoney(c.totalBalance) }}</span></div>
+                                    <div class="l-row"><span class="l-lbl">Quá Hạn</span><span class="l-val text-red-500">{{ formatMoney(c.overdueAmount) }}</span></div>
+                                    <div class="l-row bg-[#0a0a0a]"><span class="l-lbl text-blue-400">Kỳ Này</span><span class="l-val text-blue-400">{{ formatMoney(c.installment) }}</span></div>
+                                </div>
+                                <div class="px-3 pb-2"><button @click="openMoneyModal(c)" class="w-full py-1.5 rounded bg-gray-900 border border-dashed border-gray-800 text-[9px] text-gray-500 hover:text-white uppercase font-bold transition flex items-center justify-center gap-1"><i class="fas fa-pen"></i> Chỉnh Sổ Cái</button></div>
+
+                                <div class="px-3 pb-3 mt-1">
+                                    <div class="flex gap-2 overflow-x-auto no-scrollbar mb-2">
+                                        <button v-if="c.addrTemp" @click="nav(c.addrTemp)" class="chip active"><i class="fas fa-home"></i> Tạm</button>
+                                        <button v-if="c.addrPerm" @click="nav(c.addrPerm)" class="chip active"><i class="fas fa-id-card"></i> HK</button>
+                                        <button v-if="c.addrWork" @click="nav(c.addrWork)" class="chip active"><i class="fas fa-briefcase"></i> Cty</button>
+                                    </div>
+                                    <div class="text-[11px] text-gray-400 pl-2 border-l-2 border-gray-800 leading-tight font-mono">{{ c.primaryAddress }}</div>
+                                </div>
+
+                                <div class="act-grid">
+                                    <button @click="printReceipt(c)" class="act-btn hover:text-white"><i class="fas fa-print act-icon"></i><span class="act-text">In Phiếu</span></button>
+                                    <button @click="analyzeRisk(c)" class="act-btn hover:text-purple-400"><i class="fas fa-brain act-icon"></i><span class="act-text">Rủi Ro</span></button>
+                                    <button @click="pinGPS(c)" class="act-btn hover:text-green-500"><i class="fas fa-map-marker-alt act-icon"></i><span class="act-text">Ghim</span></button>
+                                    <button @click="nav(c.primaryAddress, c.lat, c.lng)" class="act-btn hover:text-blue-500"><i class="fas fa-directions act-icon"></i><span class="act-text">Đi</span></button>
+                                    <button @click="deleteCust(c.id)" class="act-btn hover:text-red-500"><i class="fas fa-trash act-icon"></i><span class="act-text">Xóa</span></button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </template>
+
+            <div v-if="isBusy" class="flex items-center gap-2 ml-4 py-2">
+                <div class="neural-loader">
+                    <div class="n-dot" style="animation-delay: 0s"></div>
+                    <div class="n-dot" style="animation-delay: 0.2s"></div>
+                    <div class="n-dot" style="animation-delay: 0.4s"></div>
+                </div>
+                <span class="text-[9px] text-indigo-500 font-mono animate-pulse">Đang xử lý...</span>
+            </div>
+        </main>
+
+        <footer class="fixed bottom-0 w-full z-40 glass-panel pb-safe">
+            <div class="flex gap-2 px-3 py-2 overflow-x-auto no-scrollbar border-b border-gray-800/50">
+                <button @click="openCampaignModal" class="px-3 py-1 rounded-full border border-yellow-900/30 bg-yellow-900/5 text-[9px] font-bold text-yellow-600 whitespace-nowrap uppercase tracking-wide"><i class="fas fa-chess-knight"></i> Chiến Dịch</button>
+                <button @click="findNearby" class="px-3 py-1 rounded-full border border-emerald-900/30 bg-emerald-900/5 text-[9px] font-bold text-emerald-600 whitespace-nowrap uppercase tracking-wide"><i class="fas fa-radar"></i> Quét Radar</button>
+                <button @click="sendQuery('Thống kê tổng quan')" class="px-3 py-1 rounded-full border border-blue-900/30 bg-blue-900/5 text-[9px] font-bold text-blue-600 whitespace-nowrap uppercase tracking-wide"><i class="fas fa-chart-pie"></i> Báo Cáo</button>
+            </div>
+            
+            <div class="p-2 flex items-end gap-2">
+                <label class="w-10 h-10 rounded-full bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-500 cursor-pointer active:scale-95 transition hover:text-indigo-400">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <input type="file" multiple accept="image/*,.pdf" class="hidden" @change="handleUpload">
+                </label>
+
+                <div class="flex-1 bg-black rounded-xl border border-gray-800 flex items-center px-3 py-2 min-h-[40px] focus-within:border-indigo-500/50 transition">
+                    <textarea v-model="inputMsg" rows="1" placeholder="Nhập lệnh Neural..." class="w-full bg-transparent text-sm text-gray-200 placeholder-gray-700 focus:outline-none resize-none font-mono" @keydown.enter.prevent="sendMsg"></textarea>
+                </div>
+
+                <button @click="sendMsg" :disabled="!inputMsg.trim()" class="w-10 h-10 rounded-full bg-indigo-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)] disabled:opacity-50 flex items-center justify-center active:scale-95 transition hover:bg-indigo-500">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </footer>
+
+        <div v-if="riskModal.show" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-gray-950 w-full max-w-sm rounded-xl border border-gray-800 overflow-hidden slide-in shadow-2xl">
+                <div class="p-4 bg-gradient-to-r from-indigo-900/20 to-gray-950 border-b border-gray-800">
+                    <h3 class="text-sm font-bold text-white uppercase"><i class="fas fa-brain mr-2 text-indigo-500"></i>AI Đang Xử Lý</h3>
+                    <p class="text-[10px] text-gray-500">{{ riskModal.data.name }}</p>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="text-4xl font-black text-white font-mono">{{ riskModal.data.score }}<span class="text-sm text-gray-700">/100</span></div>
+                        <div :class="['px-3 py-1 rounded text-xs font-bold border', riskModal.data.color === 'GREEN' ? 'border-green-800 text-green-500 bg-green-900/10' : (riskModal.data.color === 'YELLOW' ? 'border-yellow-800 text-yellow-500 bg-yellow-900/10' : 'border-red-800 text-red-500 bg-red-900/10')]">
+                            {{ riskModal.data.class }}
+                        </div>
+                    </div>
+                    <div class="space-y-2 mb-4">
+                        <div v-for="r in riskModal.data.reasons" class="text-xs text-gray-400 flex gap-2"><i class="fas fa-check-circle text-indigo-900 mt-0.5"></i> {{ r }}</div>
+                    </div>
+                    <div class="bg-gray-900 p-3 rounded text-xs italic text-gray-400 border-l-2 border-indigo-600">
+                        "{{ riskModal.data.strategy }}"
+                    </div>
+                </div>
+                <button @click="riskModal.show = false" class="w-full py-3 text-xs text-gray-500 border-t border-gray-800 hover:bg-gray-900">ĐÓNG</button>
+            </div>
+        </div>
+
+        <div v-if="moneyModal.show" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-gray-950 w-full max-w-xs rounded-xl border border-gray-800 overflow-hidden slide-in">
+                <div class="p-4 bg-gray-900 border-b border-gray-800"><h3 class="text-sm font-bold text-white uppercase"><i class="fas fa-coins mr-2 text-yellow-500"></i>Sửa Sổ Cái</h3></div>
+                <div class="p-4 space-y-3">
+                    <div><label class="text-[10px] text-gray-500 uppercase font-bold">Tổng Dư Nợ</label><input type="number" v-model.number="moneyModal.total" class="w-full bg-black border border-gray-800 rounded p-2 text-yellow-500 font-mono font-bold focus:border-yellow-600 outline-none"></div>
+                    <div><label class="text-[10px] text-gray-500 uppercase font-bold">Quá Hạn</label><input type="number" v-model.number="moneyModal.overdue" class="w-full bg-black border border-gray-800 rounded p-2 text-red-500 font-mono font-bold focus:border-red-600 outline-none"></div>
+                    <div><label class="text-[10px] text-gray-500 uppercase font-bold">Kỳ Này</label><input type="number" v-model.number="moneyModal.installment" class="w-full bg-black border border-gray-800 rounded p-2 text-blue-500 font-mono font-bold focus:border-blue-600 outline-none"></div>
+                </div>
+                <div class="flex border-t border-gray-800"><button @click="moneyModal.show=false" class="flex-1 py-3 text-xs text-gray-500 hover:text-white">HỦY</button><button @click="saveMoney" class="flex-1 py-3 text-xs text-yellow-500 font-bold border-l border-gray-800 hover:bg-gray-900">LƯU</button></div>
+            </div>
+        </div>
+
+        <div v-if="campModal.show" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-gray-950 w-full max-w-xs rounded-xl border border-gray-800 overflow-hidden slide-in">
+                <div class="p-4 bg-yellow-900/10 border-b border-yellow-900/20"><h3 class="text-sm font-bold text-yellow-500 uppercase">Chiến Dịch (Ngày 4 - Ngày 12)</h3></div>
+                <div class="p-4 grid grid-cols-3 gap-2">
+                    <button v-for="d in 9" :key="d" @click="runCampaign(d+3)" class="p-3 rounded bg-gray-900 border border-gray-800 hover:border-yellow-600 hover:text-yellow-500 transition text-sm font-bold font-mono">{{ d+3 }}</button>
+                </div>
+                <button @click="campModal.show=false" class="w-full py-3 text-xs text-gray-500 border-t border-gray-800 hover:text-white">ĐÓNG</button>
+            </div>
+        </div>
+
+        <div id="print-area" class="hidden">
+            <div v-if="printData" class="font-serif p-8 border-2 border-black h-full flex flex-col justify-between bg-white text-black">
+                <div>
+                    <div class="text-center mb-6"><h1 class="text-3xl font-bold uppercase">PHIẾU THU HỒI NỢ</h1><p class="text-sm italic mt-1">Ngày in: {{ new Date().toLocaleString('vi-VN') }}</p></div>
+                    <div class="space-y-4 text-lg">
+                        <div class="flex justify-between border-b border-gray-400 pb-1"><span>Khách hàng:</span> <span class="font-bold uppercase">{{ printData.name }}</span></div>
+                        <div class="flex justify-between border-b border-gray-400 pb-1"><span>Hợp Đồng:</span> <span class="font-mono font-bold">{{ printData.id }}</span></div>
+                        <div class="flex justify-between border-b border-gray-400 pb-1"><span>Sản phẩm:</span> <span>{{ printData.product }}</span></div>
+                        <div class="mt-8 border-2 border-black p-6">
+                            <div class="flex justify-between mb-4"><span>Thanh toán kỳ này:</span> <span class="font-bold text-xl">{{ formatMoney(printData.product === 'CRC' ? printData.overdueAmount : printData.installment) }}</span></div>
+                            <div v-if="printData.product === 'PL'" class="text-xs italic text-right mb-2 text-gray-600">(Gốc + Lãi + Phạt + Lãi QH + Phí)</div>
+                            <div class="flex justify-between pt-4 border-t border-dashed border-black"><span>TỔNG DƯ NỢ:</span> <span class="font-bold">{{ formatMoney(printData.totalBalance) }}</span></div>
+                        </div>
+                        <div class="mt-4 text-sm"><p class="underline font-bold">Địa chỉ:</p><p>{{ printData.primaryAddress }}</p></div>
+                    </div>
+                </div>
+                <div class="mt-10 pt-4 border-t border-dashed border-black"><p class="italic text-center mb-12">Cam kết thanh toán đủ.</p><div class="flex justify-between text-center"><div class="w-1/2"><p class="font-bold">Nhân Viên</p><p class="italic text-xs mt-10">(Ký tên)</p></div><div class="w-1/2"><p class="font-bold">Khách Hàng</p><p class="italic text-xs mt-10">(Ký tên)</p></div></div></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // === CẤU HÌNH KẾT NỐI ===
+        // Thay link Backend V16.0 của bạn vào đây:
+        const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwCj4aK5CI-DsA7Qn8ooQbOh6z7mOm5EcRbSLOZ10MJbg9Lu81-oKncMEl-HhCLz7Sk/exec'; 
+
+        const { createApp, ref, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                // State Core
+                const messages = ref([]);
+                const inputMsg = ref("");
+                const isBusy = ref(false);
+                const voiceMode = ref(false);
+                const chatRef = ref(null);
+                const sessionId = ref(Date.now().toString());
+                const campaignDay = ref(0);
+                const printData = ref(null);
+
+                // Modals
+                const moneyModal = ref({ show: false, data: null });
+                const riskModal = ref({ show: false, data: {} });
+                const campModal = ref({ show: false });
+
+                // --- UTILS ---
+                const formatMoney = (n) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
+                const speak = (t) => { if(window.speechSynthesis) { window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t.replace(/<[^>]*>/g,'')); u.lang='vi-VN'; u.rate=1.1; window.speechSynthesis.speak(u); }};
+
+                // --- CORE API ---
+                const pushMsg = (text, isUser=false, type='TEXT', data=null, isRoute=false) => {
+                    messages.value.push({ id: Date.now()+Math.random(), text, isUser, type, data, isRoute });
+                    nextTick(() => { if(chatRef.value) chatRef.value.scrollTop = chatRef.value.scrollHeight; });
+                    if(!isUser && voiceMode.value && text) speak(text);
+                };
+
+                const callAPI = async (payload) => {
+                    if(BACKEND_URL.includes("THAY_ID")) { alert("Chưa cấu hình Backend!"); return; }
+                    isBusy.value = true;
+                    try {
+                        const res = await fetch(BACKEND_URL, { 
+                            method: "POST", body: JSON.stringify({...payload, sessionId: sessionId.value}),
+                            redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" }
+                        });
+                        const json = await res.json();
+                        if(json.status === "error") throw new Error(json.message);
+                        return json.data;
+                    } catch(e) { pushMsg(`❌ Lỗi kết nối: ${e.message}`, false); return null; }
+                    finally { isBusy.value = false; }
+                };
+
+                // --- NEURAL INTERACTION ---
+                const sendMsg = async () => {
+                    if(!inputMsg.value.trim()) return;
+                    const txt = inputMsg.value.trim();
+                    pushMsg(txt, true);
+                    inputMsg.value = "";
+
+                    const lower = txt.toLowerCase();
+                    if(lower.includes("chiến dịch")) { openCampaignModal(); return; }
+                    if(lower.includes("quanh đây")) { findNearby(); return; }
+
+                    const res = await callAPI({ action: "CHAT_QUERY", message: txt });
+                    if(res) pushMsg(res.text, false, res.type, res.data);
+                };
+
+                const sendQuery = (q) => { inputMsg.value = q; sendMsg(); };
+
+                // --- FEATURES ---
+                
+                // 1. Risk Analysis
+                const analyzeRisk = async (c) => {
+                    pushMsg(`🔍 Analyzing neural patterns for ${c.name}...`);
+                    const res = await callAPI({ action: "ANALYZE_RISK", id: c.id });
+                    if(res && res.score !== undefined) riskModal.value = { show: true, data: res };
+                };
+
+                // 2. Manual Money
+                const openMoneyModal = (c) => { moneyModal.value = { show: true, data: c, total: c.totalBalance, overdue: c.overdueAmount, installment: c.installment }; };
+                const saveMoney = async () => {
+                    const { data, total, overdue, installment } = moneyModal.value;
+                    moneyModal.value.show = false;
+                    data.totalBalance = total; data.overdueAmount = overdue; data.installment = installment;
+                    await callAPI({ action: "UPDATE_MONEY", id: data.id, total, overdue, installment });
+                    pushMsg("✅ Ledger Synced.");
+                };
+
+                // 3. Campaign
+                const openCampaignModal = () => { campModal.value.show = true; };
+                const runCampaign = async (d) => {
+                    campModal.value.show = false; campaignDay.value = d;
+                    pushMsg(`📍 Optimizing route for Day ${d}...`);
+                    const res = await callAPI({ action: "GET_CAMPAIGN_ROUTE", dayIndex: d });
+                    if(res?.length) pushMsg(`Optimal Route (Day ${d}):`, false, "CUSTOMER_LIST", res, true);
+                    else pushMsg("Insufficient data.");
+                };
+
+                // 4. Print Legacy
+                const printReceipt = (c) => {
+                    printData.value = c;
+                    nextTick(() => { setTimeout(() => window.print(), 500); });
+                };
+
+                // 5. Utils
+                const handleUpload = async (e) => {
+                    const files = e.target.files; if(!files.length) return;
+                    pushMsg(`📡 Ingesting ${files.length} items...`);
+                    for(const f of files) {
+                        const b64 = await new Promise(r => { const fr=new FileReader(); fr.readAsDataURL(f); fr.onload=()=>r(fr.result.split(',')[1]); });
+                        const res = await callAPI({ action: "UPLOAD_FILE", fileData: b64, fileName: f.name, mimeType: f.type });
+                        if(res?.msg) pushMsg(res.msg);
+                    }
+                };
+                const findNearby = () => navigator.geolocation.getCurrentPosition(async p => {
+                    const res = await callAPI({ action: "FIND_NEARBY", lat: p.coords.latitude, lng: p.coords.longitude });
+                    if(res?.length) pushMsg(`Radar detected ${res.length} signals:`, false, "CUSTOMER_LIST", res); else pushMsg("No signals nearby.");
+                });
+                const nav = (addr, lat, lng) => window.open(lat ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr+', An Giang')}`, '_blank');
+                const viewFile = (u) => u ? window.open(u, '_blank') : alert("No source link.");
+                const pinGPS = (c) => navigator.geolocation.getCurrentPosition(async p => { await callAPI({ action: "UPDATE_GPS", id: c.id, lat: p.coords.latitude, lng: p.coords.longitude }); c.type="GPS_READY"; pushMsg("📍 Coordinates Locked."); });
+                const unpinGPS = (c) => { callAPI({ action: "UNPIN_GPS", id: c.id }); c.type="NO_GPS"; pushMsg("Coordinates Cleared."); };
+                const deleteCust = (id) => { if(confirm("Confirm Delete?")) { callAPI({ action: "DELETE_CUSTOMER", id }); pushMsg("Deleted."); } };
+                const toggleVoice = () => { voiceMode.value = !voiceMode.value; pushMsg(`Voice: ${voiceMode.value?'ON':'OFF'}`); };
+
+                return { 
+                    messages, inputMsg, isBusy, voiceMode, chatRef, 
+                    moneyModal, riskModal, campModal, campaignDay, printData,
+                    sendMsg, sendQuery, handleUpload, findNearby, openMoneyModal, saveMoney, 
+                    openCampaignModal, runCampaign, analyzeRisk, viewFile, nav, pinGPS, unpinGPS, deleteCust, 
+                    toggleVoice, formatMoney, printReceipt
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
